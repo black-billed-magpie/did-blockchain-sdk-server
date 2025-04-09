@@ -24,8 +24,8 @@ public class EvmSender implements OpenDidSender {
   public byte[] sendTransaction(ServerInformation serverInformation, ContractData data) throws Exception {
     validateInputParameters(serverInformation, data);
 
-    EthereumServerInformation ethInfo = (EthereumServerInformation) serverInformation;
-    EthereumContractData ethData = (EthereumContractData) data;
+    EvmServerInformation ethInfo = (EvmServerInformation) serverInformation;
+    EvmContractData ethData = (EvmContractData) data;
 
     Web3j web3j = createWeb3jClient(ethInfo);
 
@@ -42,15 +42,15 @@ public class EvmSender implements OpenDidSender {
   }
 
   private void validateInputParameters(ServerInformation serverInformation, ContractData data) throws Exception {
-    if (!(serverInformation instanceof EthereumServerInformation)) {
-      throw new IllegalArgumentException("ServerInformation은 EthereumServerInformation 타입이어야 합니다.");
+    if (!(serverInformation instanceof EvmServerInformation)) {
+      throw new IllegalArgumentException("ServerInformation은 EvmServerInformation 타입이어야 합니다.");
     }
-    if (!(data instanceof EthereumContractData)) {
-      throw new IllegalArgumentException("ContractData는 EthereumContractData 타입이어야 합니다.");
+    if (!(data instanceof EvmContractData)) {
+      throw new IllegalArgumentException("ContractData는 EvmContractData 타입이어야 합니다.");
     }
   }
 
-  private Web3j createWeb3jClient(EthereumServerInformation ethInfo) {
+  private Web3j createWeb3jClient(EvmServerInformation ethInfo) {
     return Web3j.build(
         new HttpService(ethInfo.getNetworkURL(),
             true)
@@ -68,8 +68,8 @@ public class EvmSender implements OpenDidSender {
     return ethGetTransactionCount.getTransactionCount();
   }
 
-  private RawTransaction createRawTransaction(EthereumServerInformation ethInfo,
-      EthereumContractData ethData,
+  private RawTransaction createRawTransaction(EvmServerInformation ethInfo,
+      EvmContractData ethData,
       BigInteger nonce) {
     if (ethData.getContractAddress() == null) {
       throw new UnsupportedOperationException("일반 이더 전송은 아직 구현되지 않았습니다.");

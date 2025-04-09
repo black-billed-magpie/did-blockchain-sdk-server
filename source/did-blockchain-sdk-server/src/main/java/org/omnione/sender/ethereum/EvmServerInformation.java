@@ -2,10 +2,11 @@ package org.omnione.sender.ethereum;
 
 import lombok.Builder;
 import lombok.Getter;
+import org.omnione.sender.ServerInformation;
 
 @Getter
 @Builder
-public class EvmServerInformation {
+public class EvmServerInformation extends ServerInformation {
 
   private String networkURL;
   private long chainId;
