@@ -19,6 +19,7 @@ package org.omnione.sender;
 import java.util.Arrays;
 import java.util.function.Supplier;
 import lombok.RequiredArgsConstructor;
+import org.omnione.sender.ethereum.EvmSender;
 import org.omnione.sender.fabric.FabricSender;
 
 /**
@@ -35,7 +36,8 @@ public enum SenderFactory {
   /**
    * Represents the sender for Hyperledger Fabric blockchain.
    */
-  FABRIC(BlockChainType.HYPER_LEDGER_FABRIC, FabricSender::new);
+  FABRIC(BlockChainType.HYPER_LEDGER_FABRIC, FabricSender::new),
+  EVM(BlockChainType.EVM, EvmSender::new);
 
   final BlockChainType blockChainType;
   final Supplier<OpenDidSender> senderSupplier;
