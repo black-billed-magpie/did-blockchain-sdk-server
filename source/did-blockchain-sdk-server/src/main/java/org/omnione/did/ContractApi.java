@@ -16,24 +16,25 @@
 
 package org.omnione.did;
 
-import org.omnione.exception.BlockChainException;
 import java.time.LocalDateTime;
 import org.omnione.did.data.model.did.InvokedDidDoc;
 import org.omnione.did.data.model.enums.did.DidDocStatus;
 import org.omnione.did.data.model.enums.vc.RoleType;
 import org.omnione.did.data.model.enums.vc.VcStatus;
 import org.omnione.did.data.model.vc.VcMeta;
+import org.omnione.exception.BlockChainException;
 
 
 /**
- * Interface for interacting with a blockchain network. Provides methods to manage DID Documents and Verifiable
- * Credentials.
+ * Interface for interacting with a blockchain network. Provides methods to manage DID Documents and
+ * Verifiable Credentials.
  */
 public interface ContractApi {
 
   /**
-   * Registers or updates a DID Document on the blockchain. This function is used for the initial registration of a DID
-   * Document or for updating a DID Document excluding changes to the document's status.
+   * Registers or updates a DID Document on the blockchain. This function is used for the initial
+   * registration of a DID Document or for updating a DID Document excluding changes to the
+   * document's status.
    *
    * @param invokedDidDoc the DID Document to be registered or updated
    * @param roleType      the role type of the entity registering or updating the DID Document
@@ -69,7 +70,8 @@ public interface ContractApi {
    * @return the updated DID Document
    * @throws BlockChainException if an error occurs during the update process
    */
-  Object updateDidDocStatus(String didKeyUrl, DidDocStatus didDocStatus, LocalDateTime terminatedTime)
+  Object updateDidDocStatus(
+      String didKeyUrl, DidDocStatus didDocStatus, LocalDateTime terminatedTime)
       throws BlockChainException;
 
   /**
