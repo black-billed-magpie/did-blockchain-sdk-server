@@ -3,11 +3,16 @@ package org.omnione.sender;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Properties;
+import java.util.logging.Logger;
 import org.omnione.sender.fabric.FabricServerInformation;
 
+
 class SenderUtils {
+
+  private static final Logger LOG = Logger.getLogger(SenderUtils.class.getName());
 
   private SenderUtils() {
     // Prevent instantiation
@@ -27,9 +32,10 @@ class SenderUtils {
    */
   protected static Properties loadProperties(String resource) throws IOException {
     Properties properties = new Properties();
-
-    try (InputStream inputStream = Paths.get(resource)
-        .isAbsolute() ? Files.newInputStream(Paths.get(resource))
+    LOG.info("Loading properties from " + resource);
+    Path path = Paths.get(resource);
+    try (InputStream inputStream = path
+        .isAbsolute() ? Files.newInputStream(path)
         : FabricServerInformation.class.getClassLoader()
             .getResourceAsStream(resource)) {
       properties.load(inputStream);
