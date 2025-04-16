@@ -18,13 +18,12 @@ import org.web3j.crypto.TransactionEncoder;
 import org.web3j.protocol.Web3j;
 import org.web3j.protocol.core.DefaultBlockParameterName;
 import org.web3j.protocol.core.methods.request.Transaction;
+import org.web3j.protocol.core.methods.response.EthCall;
 import org.web3j.protocol.core.methods.response.EthGetTransactionCount;
 import org.web3j.protocol.core.methods.response.EthSendTransaction;
 import org.web3j.protocol.exceptions.TransactionException;
 import org.web3j.protocol.http.HttpService;
-import org.web3j.tx.FastRawTransactionManager;
 import org.web3j.tx.gas.StaticGasProvider;
-import org.web3j.tx.response.PollingTransactionReceiptProcessor;
 import org.web3j.utils.Numeric;
 
 @NoArgsConstructor
@@ -32,9 +31,18 @@ public class EvmSender implements OpenDidSender {
 
   private static final Logger logger = Logger.getLogger(EvmSender.class.getName());
 
+  /**
+   * Sends a transaction to the Ethereum blockchain.
+   *
+   * @param serverInformation the server information containing network details
+   * @param data              the contract data to be sent
+   * @return the result of the transaction as a byte array
+   * @throws BlockChainException if an error occurs during the transaction
+   */
   @Override
   public byte[] sendTransaction(ServerInformation serverInformation, ContractData data)
       throws BlockChainException {
+    logger.info("Starting transaction process...");
 
     validateInputParameters(serverInformation, data);
 
@@ -42,214 +50,202 @@ public class EvmSender implements OpenDidSender {
     var ethereumContractData = (EvmContractData) data;
 
     try (Web3j web3j = createWeb3jClient(ethereumServerInformation)) {
-      var credentials = Credentials.create(ethereumContractData.getPrivateKey());
-      var gasProvider = new StaticGasProvider(
-          BigInteger.valueOf(ethereumServerInformation.getGasPrice()),
-          BigInteger.valueOf(ethereumServerInformation.getGasLimit())
-      );
-      var transactionManager = new FastRawTransactionManager(
-          web3j, credentials, new PollingTransactionReceiptProcessor(web3j, 1000, 15));
-
-      Function function = new Function(
-          ethereumContractData.getFunctionName(), ethereumContractData.getInputParameters(),
-          ethereumContractData.getOutputParameters()
-      );
-      String encodedFunction = FunctionEncoder.encode(function);
-      var nonce = getAvailableNonce(web3j, credentials.getAddress());
-
-      Transaction transaction = Transaction.createFunctionCallTransaction(
-          credentials.getAddress(), nonce, gasProvider.getGasPrice(), gasProvider.getGasLimit(),
-          ethereumContractData.getContractAddress(), BigInteger.ZERO, encodedFunction
-      );
-
-//      EthEstimateGas gasEstimate = web3j.ethEstimateGas(transaction)
-//          .send();
-//      if (gasEstimate.hasError()) {
-//        throw new TransactionException("Cannot estimate gas: " + gasEstimate.getError()
-//            .getMessage());
-//      }
-
-//      BigInteger gasLimit = gasEstimate.getAmountUsed()
-//          .multiply(BigInteger.valueOf(2));
-      BigInteger gasLimit = BigInteger.valueOf(ethereumServerInformation.getGasLimit());
-
-      RawTransaction rawTransaction = RawTransaction.createTransaction(
-          nonce, gasProvider.getGasPrice(), gasLimit, ethereumContractData.getContractAddress(),
-          BigInteger.ZERO, encodedFunction
-      );
-
-      long chainId = web3j.ethChainId()
-          .send()
-          .getChainId()
-          .longValue();
-      byte[] signedMessage = TransactionEncoder.signMessage(rawTransaction, chainId, credentials);
-      String hexValue = Numeric.toHexString(signedMessage);
-
-      EthSendTransaction transactionResponse = web3j.ethSendRawTransaction(hexValue)
-          .sendAsync()
-          .get();
-      assert transactionResponse != null;
-      if (transactionResponse.hasError()) {
-        throw new Exception("Transaction failed: " + transactionResponse.getError()
-            .getMessage());
+      if (ethereumContractData.getIsView()) {
+        logger.info("Executing view function...");
+        return executeViewFunction(web3j, ethereumContractData);
+      } else {
+        logger.info("Executing transaction function...");
+        return executeTransactionFunction(web3j, ethereumServerInformation, ethereumContractData);
       }
-
-//      TransactionReceipt receipt = web3j.ethGetTransactionReceipt(
-//              transactionResponse.getTransactionHash())
-//          .send()
-//          .getTransactionReceipt()
-//          .orElseThrow(() -> new RuntimeException("Transaction receipt not found."));
-//
-//      if (!receipt.isStatusOK()) {
-//        throw new Exception("Contract upgrade failed. Status: " + receipt.getStatus());
-//      }
-      logger.info("Transaction response hash : " + transactionResponse.getTransactionHash());
-      logger.info("Transaction json RPC : " + transactionResponse.getJsonrpc());
-      logger.info("Transaction response id : " + transactionResponse.getId());
-      logger.info("Transaction response error : " + transactionResponse.getError());
-      return transactionResponse.getResult()
-          .getBytes(StandardCharsets.UTF_8);
     } catch (Exception e) {
+      logger.severe("Transaction process failed: " + e.getMessage());
       throw new BlockChainException(BlockchainErrorCode.TRANSACTION_ERROR, e);
     }
   }
 
+  /**
+   * Validates the input parameters for the transaction.
+   *
+   * @param serverInformation the server information
+   * @param data              the contract data
+   * @throws IllegalArgumentException if the input parameters are invalid
+   */
   private void validateInputParameters(ServerInformation serverInformation, ContractData data)
       throws IllegalArgumentException {
+    logger.info("Validating input parameters...");
     if (!(serverInformation instanceof EvmServerInformation)) {
-      throw new IllegalArgumentException("ServerInformation은 EvmServerInformation 타입이어야 합니다.");
+      throw new IllegalArgumentException("ServerInformation must be of type EvmServerInformation.");
     }
     if (!(data instanceof EvmContractData)) {
-      throw new IllegalArgumentException("ContractData는 EvmContractData 타입이어야 합니다.");
+      throw new IllegalArgumentException("ContractData must be of type EvmContractData.");
     }
   }
 
+  /**
+   * Creates a web3 client for interacting with the Ethereum network.
+   *
+   * @param ethInfo the Ethereum server information
+   * @return a Web3j client instance
+   */
   private Web3j createWeb3jClient(EvmServerInformation ethInfo) {
+    logger.info("Creating Web3j client for network URL: " + ethInfo.getNetworkURL());
     return Web3j.build(new HttpService(ethInfo.getNetworkURL()));
   }
 
+  /**
+   * Executes a view function on the Ethereum blockchain.
+   *
+   * @param web3j        the web3 client
+   * @param contractData the contract data
+   * @return the result of the view function as a byte array
+   * @throws IOException if an error occurs during the function execution
+   */
+  private byte[] executeViewFunction(Web3j web3j, EvmContractData contractData) throws IOException {
+    logger.info("Executing view function: " + contractData.getFunctionName());
+    Function function = createFunction(contractData);
+    String encodedFunction = FunctionEncoder.encode(function);
+
+    var tx = Transaction.createEthCallTransaction(
+        contractData.getContractAddress(), contractData.getContractAddress(), encodedFunction);
+    EthCall response = web3j.ethCall(tx, DefaultBlockParameterName.LATEST)
+        .send();
+
+    if (response.isReverted()) {
+      logger.warning("View function reverted. Reason: " + response.getRevertReason());
+      return response.getRevertReason()
+          .getBytes(StandardCharsets.UTF_8);
+    }
+    logger.info("View function executed successfully.");
+    return response.getValue()
+        .getBytes(StandardCharsets.UTF_8);
+  }
+
+  /**
+   * Executes a transaction function on the Ethereum blockchain.
+   *
+   * @param web3j             the web3 client
+   * @param serverInformation the Ethereum server information
+   * @param contractData      the contract data
+   * @return the result of the transaction as a byte array
+   * @throws Exception if an error occurs during the transaction
+   */
+  private byte[] executeTransactionFunction(
+      Web3j web3j, EvmServerInformation serverInformation, EvmContractData contractData)
+      throws Exception {
+    logger.info("Starting transaction execution for function: " + contractData.getFunctionName());
+
+    // Credentials 생성
+    logger.info("Creating credentials from private key...");
+    var credentials = Credentials.create(contractData.getPrivateKey());
+    logger.info("Credentials created for address: " + credentials.getAddress());
+
+    // GasProvider 설정
+    logger.info("Setting up gas provider with gas price: " + serverInformation.getGasPrice() +
+                " and gas limit: " + serverInformation.getGasLimit());
+    var gasProvider = new StaticGasProvider(
+        BigInteger.valueOf(serverInformation.getGasPrice()),
+        BigInteger.valueOf(serverInformation.getGasLimit())
+    );
+
+    // Function 생성
+    logger.info("Creating function object for contract interaction...");
+    Function function = createFunction(contractData);
+    logger.info("Function object created: " + function.getName());
+    String encodedFunction = FunctionEncoder.encode(function);
+    logger.info("Encoded function: " + encodedFunction);
+
+    // Nonce 가져오기
+    logger.info("Retrieving nonce for address: " + credentials.getAddress());
+    BigInteger nonce = getAvailableNonce(web3j, credentials.getAddress());
+    logger.info("Nonce retrieved: " + nonce);
+
+    // Chain ID 가져오기
+    logger.info("Retrieving chain ID from the Ethereum network...");
+    long chainId = web3j.ethChainId()
+        .send()
+        .getChainId()
+        .longValue();
+    logger.info("Chain ID retrieved: " + chainId);
+
+    // RawTransaction 생성
+    logger.info("Creating raw transaction...");
+    var rawTransaction = RawTransaction.createTransaction(
+        chainId, nonce, gasProvider.getGasLimit(), contractData.getContractAddress(),
+        BigInteger.ZERO, encodedFunction, BigInteger.ZERO, BigInteger.ZERO
+    );
+    logger.info("Raw transaction created successfully.");
+
+    // 트랜잭션 서명
+    logger.info("Signing the transaction...");
+    byte[] signedMessage = TransactionEncoder.signMessage(rawTransaction, chainId, credentials);
+    String hexValue = Numeric.toHexString(signedMessage);
+    logger.info("Transaction signed. Hex value: " + hexValue);
+
+    // 트랜잭션 전송
+    logger.info("Sending the transaction to the Ethereum network...");
+    EthSendTransaction transactionResponse = web3j.ethSendRawTransaction(hexValue)
+        .sendAsync()
+        .get();
+
+    // 트랜잭션 결과 확인
+    if (transactionResponse.hasError()) {
+      logger.severe("Transaction failed with error: " + transactionResponse.getError()
+          .getMessage());
+      throw new Exception("Transaction failed: " + transactionResponse.getError()
+          .getMessage());
+    }
+
+    logger.info("Transaction executed successfully. Transaction hash: " +
+                transactionResponse.getTransactionHash());
+    logger.info("Transaction response raw data: " + transactionResponse.getRawResponse());
+
+    return transactionResponse.getResult()
+        .getBytes(StandardCharsets.UTF_8);
+  }
+
+  /**
+   * Creates a function object for the Ethereum transaction.
+   *
+   * @param contractData the contract data
+   * @return the function object
+   */
+  private Function createFunction(EvmContractData contractData) {
+    logger.info("Creating function object for: " + contractData.getFunctionName());
+
+    if (contractData.getInputParameters() == null || contractData.getOutputParameters() == null) {
+      throw new IllegalArgumentException("Input and output parameters cannot be null.");
+    }
+
+    return new Function(
+        contractData.getFunctionName(), contractData.getInputParameters(),
+        contractData.getOutputParameters()
+    );
+  }
+
+  /**
+   * Retrieves the available nonce for the given Ethereum address.
+   *
+   * @param web3j   the web3 client
+   * @param address the Ethereum address
+   * @return the available nonce
+   * @throws IOException          if an error occurs while retrieving the nonce
+   * @throws TransactionException if the nonce retrieval fails
+   */
   private BigInteger getAvailableNonce(Web3j web3j, String address)
       throws IOException, TransactionException {
+    logger.info("Retrieving available nonce for address: " + address);
     EthGetTransactionCount ethGetTransactionCount = web3j.ethGetTransactionCount(
             address, DefaultBlockParameterName.LATEST)
         .send();
 
     if (ethGetTransactionCount.hasError()) {
+      logger.severe("Failed to retrieve nonce: " + ethGetTransactionCount.getError()
+          .getMessage());
       throw new TransactionException("Cannot get nonce: " + ethGetTransactionCount.getError()
           .getMessage());
     }
 
+    logger.info("Nonce retrieved successfully: " + ethGetTransactionCount.getTransactionCount());
     return ethGetTransactionCount.getTransactionCount();
   }
-//
-//  private RawTransaction createRawTransaction(EvmContractData data) {
-//    String encodedFunction = FunctionEncoder.encode(
-//        new Function(
-//            data.getFunctionName(), data.getInputParameters(),
-//            data.getOutputParameters()
-//        ));
-//
-//
-//  }
-
-//  @Override
-//  public byte[] sendTransaction(ServerInformation serverInformation, ContractData data)
-//      throws BlockChainException {
-//    validateInputParameters(serverInformation, data);
-//
-//    EvmServerInformation ethInfo = (EvmServerInformation) serverInformation;
-//    EvmContractData ethData = (EvmContractData) data;
-//
-//    Web3j web3j = createWeb3jClient(ethInfo);
-//    Credentials credentials = Credentials.create(ethData.getPrivateKey());
-//
-//    try {
-//      BigInteger nonce = getNonce(web3j, credentials.getAddress());
-//
-//      RawTransaction rawTransaction = createRawTransaction(ethInfo, ethData, nonce);
-//      String transactionHash = signAndSendTransaction(
-//          web3j, rawTransaction, ethInfo.getChainId(), credentials);
-//      return transactionHash.getBytes();
-//    } catch (Exception e) {
-//      throw new BlockChainException(BlockchainErrorCode.TRANSACTION_ERROR, e);
-//    } finally {
-//      web3j.shutdown();
-//    }
-//  }
-//
-//  private BigInteger getNonce(Web3j web3j, String address) throws Exception {
-//    EthGetTransactionCount ethGetTransactionCount = web3j.ethGetTransactionCount(
-//            address, DefaultBlockParameterName.LATEST)
-//        .send();
-//
-//    if (ethGetTransactionCount.hasError()) {
-//      throw new Exception("Cannot get nonce: " + ethGetTransactionCount.getError()
-//          .getMessage());
-//    }
-//
-//    return ethGetTransactionCount.getTransactionCount();
-//  }
-//
-//  private RawTransaction createRawTransaction(
-//      Credentials credentials, EvmServerInformation ethInfo,
-//      EvmContractData ethData, BigInteger nonce
-//  ) {
-//    if (ethData.getContractAddress() == null) {
-//      throw new UnsupportedOperationException("일반 이더 전송은 아직 구현되지 않았습니다.");
-//    }
-//
-//    // create encoded function data for contract call
-//    String encodedFunction = FunctionEncoder.encode(
-//        new Function(
-//            ethData.getFunctionName(), ethData.getInputParameters(),
-//            ethData.getOutputParameters()
-//        ));
-//
-//    // Config EIP-1559 transaction
-//    BigInteger gasLimit = BigInteger.valueOf(ethInfo.getGasLimit());
-//    BigInteger gasPrice = BigInteger.valueOf(ethInfo.getGasPrice());
-//    BigInteger maxPriorityFeePerGas = BigInteger.valueOf(ethInfo.getMaxPriorityFeePerGas());
-//    BigInteger maxFeePerGas = BigInteger.valueOf(ethInfo.getMaxFeePerGas());
-//    long chainId = ethInfo.getChainId();
-//
-//    Transaction tx = Transaction.createFunctionCallTransaction(
-//        credentials.getAddress(),
-//        nonce,
-//        gasPrice,
-//        gasLimit,
-//        ethData.getContractAddress(),
-//        encodedFunction
-//    );
-//
-//    return RawTransaction.createTransaction(
-//        nonce,
-//        gasLimit,
-//        ethData.getContractAddress(),
-//        encodedFunction,
-//        BigInteger.ZERO,
-//        maxPriorityFeePerGas,
-//        maxFeePerGas
-//    );
-//
-//    return null;
-//  }
-//
-//  private String signAndSendTransaction(
-//      Web3j web3j, RawTransaction rawTransaction, long chainId,
-//      Credentials credentials
-//  ) throws Exception {
-//    byte[] signedMessage = TransactionEncoder.signMessage(rawTransaction, chainId, credentials);
-//    String hexValue = Numeric.toHexString(signedMessage);
-//
-//    logger.info("Signed transaction: " + hexValue);
-//    EthSendTransaction ethSendTransaction = web3j.ethSendRawTransaction(hexValue)
-//        .send();
-//
-//    if (ethSendTransaction.hasError()) {
-//      throw new Exception("트랜잭션 전송 실패: " + ethSendTransaction.getError()
-//          .getMessage());
-//    }
-//
-//    return ethSendTransaction.getTransactionHash();
-//  }
 }

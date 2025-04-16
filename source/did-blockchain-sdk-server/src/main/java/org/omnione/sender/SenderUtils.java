@@ -32,7 +32,6 @@ class SenderUtils {
    */
   protected static Properties loadProperties(String resource) throws IOException {
     Properties properties = new Properties();
-    LOG.info("Loading properties from " + resource);
     Path path = Paths.get(resource);
     try (InputStream inputStream = path
         .isAbsolute() ? Files.newInputStream(path)

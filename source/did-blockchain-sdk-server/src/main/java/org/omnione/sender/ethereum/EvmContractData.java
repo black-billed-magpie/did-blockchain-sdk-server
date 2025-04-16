@@ -16,8 +16,6 @@ public class EvmContractData extends ContractData {
   private String functionName;
   private List<Type> inputParameters;
   private List<TypeReference<?>> outputParameters;
-  private String ethValue;
-  private String data;
   private Boolean isView;
 
   public EvmContractData(String resourcePath) throws IOException {
@@ -30,16 +28,12 @@ public class EvmContractData extends ContractData {
   }
 
   public void setTransactionDetails(
-      ContractFunctionName contractFunctionName,
-      List<Type> inputParameters,
-      List<TypeReference<?>> outputParameters,
-      String ethValue, String data
+      ContractFunctionName contractFunctionName, List<Type> inputParameters,
+      List<TypeReference<?>> outputParameters
   ) {
     this.functionName = contractFunctionName.getFunctionName();
     this.inputParameters = inputParameters;
     this.outputParameters = outputParameters;
-    this.ethValue = ethValue;
-    this.data = data;
     this.isView = contractFunctionName.getIsViewFunction();
   }
 }

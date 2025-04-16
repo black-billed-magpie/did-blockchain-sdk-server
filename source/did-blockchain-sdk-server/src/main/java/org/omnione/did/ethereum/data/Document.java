@@ -11,20 +11,20 @@ import org.web3j.abi.datatypes.reflection.Parameterized;
 @Getter
 public class Document extends DynamicStruct {
 
-  private final List<String> context;
-  private final String id;
-  private final String controller;
-  private final String created;
-  private final String updated;
-  private final String versionId;
-  private final Boolean deactivated;
-  private final List<VerificationMethod> verificationMethod;
-  private final List<String> assertionsMethod;
-  private final List<String> authentication;
-  private final List<String> keyAgreement;
-  private final List<String> capabilityInvocation;
-  private final List<String> capabilityDelegation;
-  private final List<Service> services;
+  public final List<String> context;
+  public final String id;
+  public final String controller;
+  public final String created;
+  public final String updated;
+  public final String versionId;
+  public final Boolean deactivated;
+  public final List<VerificationMethod> verificationMethod;
+  public final List<String> assertionsMethod;
+  public final List<String> authentication;
+  public final List<String> keyAgreement;
+  public final List<String> capabilityInvocation;
+  public final List<String> capabilityDelegation;
+  public final List<Service> services;
 
   public Document(
       List<String> context, String id, String controller, String created, String updated,

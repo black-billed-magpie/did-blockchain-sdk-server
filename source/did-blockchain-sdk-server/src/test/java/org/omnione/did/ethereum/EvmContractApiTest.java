@@ -10,7 +10,6 @@ import java.security.NoSuchProviderException;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.List;
 import javax.json.Json;
 import javax.json.JsonObject;
 import org.bouncycastle.util.encoders.Hex;
@@ -24,22 +23,10 @@ import org.omnione.did.data.model.did.Proof;
 import org.omnione.did.data.model.enums.vc.RoleType;
 import org.omnione.did.data.model.provider.Provider;
 import org.omnione.exception.BlockChainException;
-import org.omnione.sender.ethereum.EvmServerInformation;
-import org.web3j.abi.FunctionEncoder;
-import org.web3j.abi.FunctionReturnDecoder;
-import org.web3j.abi.TypeReference;
-import org.web3j.abi.datatypes.Function;
-import org.web3j.abi.datatypes.Type;
-import org.web3j.abi.datatypes.Utf8String;
 import org.web3j.crypto.ECKeyPair;
 import org.web3j.crypto.Hash;
 import org.web3j.crypto.Keys;
 import org.web3j.crypto.Sign;
-import org.web3j.protocol.Web3j;
-import org.web3j.protocol.core.DefaultBlockParameterName;
-import org.web3j.protocol.core.methods.request.Transaction;
-import org.web3j.protocol.core.methods.response.EthCall;
-import org.web3j.protocol.http.HttpService;
 
 class EvmContractApiTest {
 
@@ -47,13 +34,11 @@ class EvmContractApiTest {
   private final String RESOURCE_PATH = "/Users/mykim/Workspace/OpenSource/did-blockchain-sdk-server/source/did-blockchain-sdk-server/src/test/resources/application-test.properties";
   private final String JSON_DOCUMNET_PATH = "/Users/mykim/Workspace/OpenSource/did-blockchain-sdk-server/source/did-blockchain-sdk-server/src/test/resources/data/document.json";
   private ECKeyPair keyPair = null;
-  private EvmServerInformation serverInformation;
 
 
   @BeforeEach
   void setUp()
-      throws IOException, InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
-    this.serverInformation = new EvmServerInformation(RESOURCE_PATH);
+      throws InvalidAlgorithmParameterException, NoSuchAlgorithmException, NoSuchProviderException {
     this.keyPair = Keys.createEcKeyPair();
   }
 
@@ -129,38 +114,11 @@ class EvmContractApiTest {
   }
 
   @Test
-  void getDocumentTest() throws IOException {
-    Web3j web3j = Web3j.build(new HttpService("http://10.48.17.200:50010")); // Besu RPC 주소
+  void getDidDoc() throws IOException {
+    EvmContractApi evmContractApi = new EvmContractApi(RESOURCE_PATH);
 
-    // 2. 함수 정의
-    Function function = new Function(
-        "getDidDoc", List.of(new Utf8String("did:example:123456789abcdefghi")),
-        List.of(new TypeReference<Utf8String>() {
-        })
-    );
-
-    String encodedFunction = FunctionEncoder.encode(function);
-
-    // 3. 트랜잭션 생성 (eth_call)
-    String fromAddress = "0xFE3B557E8Fb62b89F4916B721be55cEb828dBd73"; // 아무 valid한 주소
-    String contractAddress = "0x9B8397f1B0FEcD3a1a40CdD5E8221Fa461898517";
-
-    Transaction ethCallTx = Transaction.createEthCallTransaction(
-        fromAddress, contractAddress,
-        encodedFunction
-    );
-
-    // 4. 함수 호출
-    EthCall response = web3j.ethCall(ethCallTx, DefaultBlockParameterName.LATEST)
-        .send();
-
-    // 5. 결과 디코딩
-    LOG.info(() -> "Response revert reason: " + response.getRevertReason());
-    String value = response.getValue();
-    List<Type> result = FunctionReturnDecoder.decode(value, function.getOutputParameters());
-    Utf8String didDoc = (Utf8String) result.get(0);
-
-    System.out.println("📄 DID Document: " + didDoc.getValue());
-
+    Assertions.assertDoesNotThrow(() -> {
+      var result = evmContractApi.getDidDoc("did:example:123456789abcdefghi?versionId=1");
+    });
   }
 }
