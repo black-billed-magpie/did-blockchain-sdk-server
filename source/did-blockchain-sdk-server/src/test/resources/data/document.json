@@ -1,5 +1,5 @@
 {
-  "context": [
+  "@context": [
     "https://www.w3.org/ns/did/v1",
     "https://w3id.org/security/suites/ed25519-2020/v1"
   ],
@@ -12,20 +12,20 @@
   "verificationMethod": [
     {
       "id": "did:example:123456789abcdefghi?versionId=1#key1",
-      "keyType": 1,
+      "type": 1,
       "controller": "did:example:123456789abcdefghi",
       "publicKeyMultibase": "zH3C2AVvLMv6gmMNam3uVAjZpfkcJCwDwnZn6z3wXmqPV",
       "authType": 0
     },
     {
       "id": "did:example:123456789abcdefghi?versionId=1#key2",
-      "keyType": 2,
+      "type": 2,
       "controller": "did:example:123456789abcdefghi",
       "publicKeyMultibase": "z4BWwfeqdp1obQptLLMvPNgBw48p7og1ie6Hf9p5nTpNN",
       "authType": 1
     }
   ],
-  "assertionsMethod": [
+  "assertionMethod": [
     "did:example:123456789abcdefghi?versionId=1#key1"
   ],
   "authentication": [
@@ -41,21 +41,20 @@
   "capabilityDelegation": [
     "did:example:123456789abcdefghi?versionId=1#key1"
   ],
-  "services": [
+  "service": [
     {
       "id": "did:example:123456789abcdefghi#vcs",
-      "serviceEndpoint": "https://example.com/vc/",
-      "serviceType": [
-        "VerifiableCredentialService",
-        "IdentityHub"
-      ]
+      "serviceEndpoint": [
+        "https://example.com/vc/"
+      ],
+      "type": "VerifiableCredentialService"
     },
     {
       "id": "did:example:123456789abcdefghi#discovery",
-      "serviceEndpoint": "https://example.com/discovery/",
-      "serviceType": [
-        "DiscoveryService"
-      ]
+      "serviceEndpoint": [
+        "https://example.com/discovery/"
+      ],
+      "type": "DiscoveryService"
     }
   ]
 }
