@@ -3,7 +3,6 @@ package org.omnione.did.ethereum;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.logging.Logger;
@@ -75,6 +74,7 @@ public class EvmContractApi implements ContractApi {
         Utf8String.class,
         org.web3j.abi.Utils.typeMap(didDocument.getContext(), Utf8String.class)
     );
+
     Utf8String id = new Utf8String(didDocument.getId());
     Utf8String controller = new Utf8String(didDocument.getController());
     Utf8String created = new Utf8String(didDocument.getCreated());
@@ -145,120 +145,74 @@ public class EvmContractApi implements ContractApi {
         new String(documentBytes), Utils.convert(outputParams));
 
     List<Type> decodedDynamicStruct = ((DynamicStruct) decodedData.get(0)).getValue();
-
-    DynamicArray<Utf8String> context = (DynamicArray<Utf8String>) decodedDynamicStruct.get(0);
-    Utf8String id = (Utf8String) decodedDynamicStruct.get(1);
-    Utf8String controller = (Utf8String) decodedDynamicStruct.get(2);
-    Utf8String created = (Utf8String) decodedDynamicStruct.get(3);
-    Utf8String updated = (Utf8String) decodedDynamicStruct.get(4);
-    Utf8String versionId = (Utf8String) decodedDynamicStruct.get(5);
-    Bool deactivated = (Bool) decodedDynamicStruct.get(6);
-    DynamicArray<DynamicStruct> verificationMethodStruct = (DynamicArray<DynamicStruct>) decodedDynamicStruct.get(
-        7);
-    DynamicArray<Utf8String> assertionMethod = (DynamicArray<Utf8String>) decodedDynamicStruct.get(
-        8);
-    DynamicArray<Utf8String> authentication = (DynamicArray<Utf8String>) decodedDynamicStruct.get(
-        9);
-    DynamicArray<Utf8String> keyAgreement = (DynamicArray<Utf8String>) decodedDynamicStruct.get(10);
-    DynamicArray<Utf8String> capabilityInvocation = (DynamicArray<Utf8String>) decodedDynamicStruct.get(
-        11);
-    DynamicArray<Utf8String> capabilityDelegation = (DynamicArray<Utf8String>) decodedDynamicStruct.get(
-        12);
-    DynamicArray<DynamicStruct> services = (DynamicArray<DynamicStruct>) decodedDynamicStruct.get(
-        13);
-
     DidDocument didDocument = new DidDocument();
-    didDocument.setContext(context.getValue()
-        .stream()
-        .map(Utf8String::getValue)
-        .toList());
-    didDocument.setId(id.getValue());
-    didDocument.setController(controller.getValue());
-    didDocument.setCreated(created.getValue());
-    didDocument.setUpdated(updated.getValue());
-    didDocument.setVersionId(versionId.getValue());
-    didDocument.setDeactivated(deactivated.getValue());
-
-    List<org.omnione.did.data.model.did.VerificationMethod> verificationMethodList = new ArrayList<>();
-    for (int i = 0; i < verificationMethodStruct.getValue()
-        .size(); i++) {
-      DynamicStruct verificationMethodStructItem = verificationMethodStruct.getValue()
-          .get(i);
-      Utf8String idValue = (Utf8String) verificationMethodStructItem.getValue()
-          .get(0);
-      LOG.info(() -> "idValue: " + idValue.getValue());
-      Uint8 typeValue = (Uint8) verificationMethodStructItem.getValue()
-          .get(1);
-      Utf8String controllerValue = (Utf8String) verificationMethodStructItem.getValue()
-          .get(2);
-      Utf8String publicKeyMultibaseValue = (Utf8String) verificationMethodStructItem.getValue()
-          .get(3);
-      Uint8 authTypeValue = (Uint8) verificationMethodStructItem.getValue()
-          .get(4);
-
-      org.omnione.did.data.model.did.VerificationMethod verificationMethod = new org.omnione.did.data.model.did.VerificationMethod();
-      verificationMethod.setId(idValue.getValue());
-      verificationMethod.setType(String.valueOf(typeValue.getValue()));
-      verificationMethod.setController(controllerValue.getValue());
-      verificationMethod.setPublicKeyMultibase(publicKeyMultibaseValue.getValue());
-      verificationMethod.setAuthType(authTypeValue.getValue()
-          .intValue());
-
-      verificationMethodList.add(verificationMethod);
-    }
-
-    didDocument.setVerificationMethod(verificationMethodList);
-    didDocument.setAssertionMethod(assertionMethod.getValue()
-        .stream()
-        .map(Utf8String::getValue)
-        .toList());
-    didDocument.setAuthentication(authentication.getValue()
-        .stream()
-        .map(Utf8String::getValue)
-        .toList());
-    didDocument.setKeyAgreement(keyAgreement.getValue()
-        .stream()
-        .map(Utf8String::getValue)
-        .toList());
-    didDocument.setCapabilityInvocation(capabilityInvocation.getValue()
-        .stream()
-        .map(Utf8String::getValue)
-        .toList());
-    didDocument.setCapabilityDelegation(capabilityDelegation.getValue()
-        .stream()
-        .map(Utf8String::getValue)
-        .toList());
-
-    List<org.omnione.did.data.model.did.Service> servicesList = new ArrayList<>();
-    for (int i = 0; i < services.getValue()
-        .size(); i++) {
-      DynamicStruct serviceStructItem = services.getValue()
-          .get(i);
-      Utf8String idValue = (Utf8String) serviceStructItem.getValue()
-          .get(0);
-      Utf8String typeValue = (Utf8String) serviceStructItem.getValue()
-          .get(1);
-      DynamicArray<Utf8String> serviceEndpointValue = (DynamicArray<Utf8String>) serviceStructItem.getValue()
-          .get(2);
-
-      List<String> serviceEndpointList = new ArrayList<>();
-      for (int j = 0; j < serviceEndpointValue.getValue()
-          .size(); j++) {
-        Utf8String endpointItem = serviceEndpointValue.getValue()
-            .get(j);
-        serviceEndpointList.add(endpointItem.getValue());
-      }
-
-      org.omnione.did.data.model.did.Service service = new org.omnione.did.data.model.did.Service();
-      service.setId(idValue.getValue());
-      service.setType(typeValue.getValue());
-      service.setServiceEndpoint(serviceEndpointList);
-
-      servicesList.add(service);
-    }
-    didDocument.setService(servicesList);
+    didDocument.setContext(
+        mapDynamicArrayToList((DynamicArray<Utf8String>) decodedDynamicStruct.get(0)));
+    didDocument.setId(((Utf8String) decodedDynamicStruct.get(1)).getValue());
+    didDocument.setController(((Utf8String) decodedDynamicStruct.get(2)).getValue());
+    didDocument.setCreated(((Utf8String) decodedDynamicStruct.get(3)).getValue());
+    didDocument.setUpdated(((Utf8String) decodedDynamicStruct.get(4)).getValue());
+    didDocument.setVersionId(((Utf8String) decodedDynamicStruct.get(5)).getValue());
+    didDocument.setDeactivated(((Bool) decodedDynamicStruct.get(6)).getValue());
+    didDocument.setVerificationMethod(
+        mapVerificationMethod((DynamicArray<DynamicStruct>) decodedDynamicStruct.get(7)));
+    didDocument.setAssertionMethod(
+        mapDynamicArrayToList((DynamicArray<Utf8String>) decodedDynamicStruct.get(8)));
+    didDocument.setAuthentication(
+        mapDynamicArrayToList((DynamicArray<Utf8String>) decodedDynamicStruct.get(9)));
+    didDocument.setKeyAgreement(
+        mapDynamicArrayToList((DynamicArray<Utf8String>) decodedDynamicStruct.get(10)));
+    didDocument.setCapabilityInvocation(
+        mapDynamicArrayToList((DynamicArray<Utf8String>) decodedDynamicStruct.get(11)));
+    didDocument.setCapabilityDelegation(
+        mapDynamicArrayToList((DynamicArray<Utf8String>) decodedDynamicStruct.get(12)));
+    didDocument.setService(mapServices((DynamicArray<DynamicStruct>) decodedDynamicStruct.get(13)));
 
     return didDocument;
+  }
+
+  private List<String> mapDynamicArrayToList(DynamicArray<Utf8String> dynamicArray) {
+    return dynamicArray.getValue()
+        .stream()
+        .map(Utf8String::getValue)
+        .toList();
+  }
+
+  private List<org.omnione.did.data.model.did.VerificationMethod> mapVerificationMethod(
+      DynamicArray<DynamicStruct> verificationMethodStruct
+  ) {
+    return verificationMethodStruct.getValue()
+        .stream()
+        .map(item -> {
+          List<Type> values = item.getValue();
+          org.omnione.did.data.model.did.VerificationMethod method = new org.omnione.did.data.model.did.VerificationMethod();
+          method.setId(((Utf8String) values.get(0)).getValue());
+          method.setType(String.valueOf(((Uint8) values.get(1)).getValue()));
+          method.setController(((Utf8String) values.get(2)).getValue());
+          method.setPublicKeyMultibase(((Utf8String) values.get(3)).getValue());
+          method.setAuthType(((Uint8) values.get(4)).getValue()
+              .intValue());
+          return method;
+        })
+        .toList();
+  }
+
+  private List<org.omnione.did.data.model.did.Service> mapServices(
+      DynamicArray<DynamicStruct> servicesStruct
+  ) {
+    return servicesStruct.getValue()
+        .stream()
+        .map(item -> {
+          List<Type> values = item.getValue();
+          org.omnione.did.data.model.did.Service service = new org.omnione.did.data.model.did.Service();
+          service.setId(((Utf8String) values.get(0)).getValue());
+          service.setType(((Utf8String) values.get(1)).getValue());
+          service.setServiceEndpoint(
+              mapDynamicArrayToList((DynamicArray<Utf8String>) values.get(2)));
+
+          return service;
+        })
+        .toList();
   }
 
   @Override
