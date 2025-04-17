@@ -66,7 +66,7 @@ class EvmContractApiSpec extends Specification {
         return new InvokedDidDoc(document, proof, provider, nonce)
     }
 
-    private String readDocument() {
+    private static String readDocument() {
         try {
             return new String(Files.readAllBytes(Paths.get(JSON_DOCUMENT_PATH)))
         } catch (IOException e) {
@@ -88,19 +88,19 @@ class EvmContractApiSpec extends Specification {
         return proof
     }
 
-    private String getCurrentTimeInIsoFormat() {
+    private static String getCurrentTimeInIsoFormat() {
         return DateTimeFormatter.ISO_INSTANT.format(Instant.now()
                 .atOffset(ZoneOffset.UTC))
     }
 
-    private Provider newProvider(String did, String certVcRef) {
+    private static Provider newProvider(String did, String certVcRef) {
         def provider = new Provider()
         provider.did = did
         provider.certVcRef = certVcRef
         return provider
     }
 
-    private String generateNonce() {
+    private static String generateNonce() {
         return UUID.randomUUID()
                 .toString()
     }
