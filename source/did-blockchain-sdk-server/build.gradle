@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'org.web3j' version '4.13.0'
+    id 'groovy'
 }
 
 group = 'org.omnione.did'
@@ -29,6 +30,10 @@ dependencies {
     implementation("org.web3j:core:${web3jCoreVersion}")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.15.2")
     implementation("org.apache.commons:commons-pool2:2.12.0")
+    implementation platform('org.apache.groovy:groovy-bom:4.0.25')
+    implementation 'org.apache.groovy:groovy'
+    testImplementation platform("org.spockframework:spock-bom:2.3-groovy-4.0")
+    testImplementation("org.spockframework:spock-core")
     annotationProcessor("com.fasterxml.jackson.core:jackson-databind:2.15.2")
     annotationProcessor("org.projectlombok:lombok:1.18.28")
     compileOnly("org.projectlombok:lombok:1.18.28")
