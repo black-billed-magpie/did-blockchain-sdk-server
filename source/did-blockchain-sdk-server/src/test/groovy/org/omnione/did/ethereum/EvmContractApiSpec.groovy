@@ -4,6 +4,7 @@ import org.bouncycastle.util.encoders.Hex
 import org.omnione.did.data.model.did.DidDocument
 import org.omnione.did.data.model.did.InvokedDidDoc
 import org.omnione.did.data.model.did.Proof
+import org.omnione.did.data.model.enums.did.DidDocStatus
 import org.omnione.did.data.model.enums.vc.RoleType
 import org.omnione.did.data.model.provider.Provider
 import org.web3j.crypto.ECKeyPair
@@ -20,36 +21,45 @@ import java.time.format.DateTimeFormatter
 
 class EvmContractApiSpec extends Specification {
 
-    private static final String RESOURCE_PATH = "/Users/mykim/Workspace/OpenSource/did-blockchain-sdk-server/source/did-blockchain-sdk-server/src/test/resources/application-test.properties"
-    private static final String JSON_DOCUMENT_PATH = "/Users/mykim/Workspace/OpenSource/did-blockchain-sdk-server/source/did-blockchain-sdk-server/src/test/resources/data/document.json"
+    private static final String RESOURCE_PATH = '/Users/mykim/Workspace/OpenSource/did-blockchain-sdk-server/source/did-blockchain-sdk-server/src/test/resources/application-test.properties'
+    private static final String JSON_DOCUMENT_PATH = '/Users/mykim/Workspace/OpenSource/did-blockchain-sdk-server/source/did-blockchain-sdk-server/src/test/resources/data/document.json'
     private ECKeyPair keyPair
 
-
     def "registerDidDoc should not throw any exception"() {
-        given: "An instance of EvmContractApi and a new InvokedDidDoc"
+        given: 'An instance of EvmContractApi and a new InvokedDidDoc'
         def evmContractApi = new EvmContractApi(RESOURCE_PATH)
         def document = newInvokedDidDocument()
 
-        when: "registDidDoc is called"
+        when: 'registDidDoc is called'
         evmContractApi.registDidDoc(document, RoleType.APP_PROVIDER)
 
-        then: "No exception is thrown"
+        then: 'No exception is thrown'
         noExceptionThrown()
     }
 
-
     def "getDidDoc should return a valid DidDocument"() {
-        given: "An instance of EvmContractApi"
+        given: 'An instance of EvmContractApi'
         def evmContractApi = new EvmContractApi(RESOURCE_PATH)
 
-        when: "getDidDoc is called with a valid DID"
-        def document = evmContractApi.getDidDoc("did:example:123456789abcdefghi?versionId=1")
+        when: 'getDidDoc is called with a valid DID'
+        def document = evmContractApi.getDidDoc('did:example:123456789abcdefghi?versionId=1')
                 as DidDocument
 
-        then: "The returned DidDocument has the expected context"
-        document.context[0] == "https://www.w3.org/ns/did/v1"
+        then: 'The returned DidDocument has the expected context'
+        document.context[0] == 'https://www.w3.org/ns/did/v1'
     }
 
+    def "updateDidDoc should not throw any exception"() {
+        given: 'An instance of EvmContractApi and a new InvokedDidDoc'
+        def evmContractApi = new EvmContractApi(RESOURCE_PATH)
+        def didKeyUrl = 'did:example:123456789abcdefghi?versionId=1#key1'
+
+        when: 'updateDidDoc is called'
+        evmContractApi.updateDidDocStatus(didKeyUrl, DidDocStatus.DEACTIVATED)
+
+        then: 'No exception is thrown'
+        noExceptionThrown()
+    }
 
     def setup() {
         keyPair = Keys.createEcKeyPair()
@@ -60,7 +70,7 @@ class EvmContractApiSpec extends Specification {
         assert document != null
 
         def proof = newProof()
-        def provider = newProvider("did:example:123456789abcdefghi", "certVcRef")
+        def provider = newProvider('did:example:123456789abcdefghi', 'certVcRef')
         def nonce = generateNonce()
 
         return new InvokedDidDoc(document, proof, provider, nonce)
@@ -76,10 +86,10 @@ class EvmContractApiSpec extends Specification {
 
     private Proof newProof() {
         def proof = new Proof()
-        proof.type = "Secp256k1Signature2018"
+        proof.type = 'Secp256k1Signature2018'
         proof.created = getCurrentTimeInIsoFormat()
-        proof.proofPurpose = "verificationMethod"
-        proof.verificationMethod = "did:example:123456789abcdefghi?versionId=1#key1"
+        proof.proofPurpose = 'verificationMethod'
+        proof.verificationMethod = 'did:example:123456789abcdefghi?versionId=1#key1'
 
         def messageHash = Hash.sha3(proof.toJson().bytes)
         def signature = Sign.signMessage(messageHash, keyPair, false)
@@ -104,4 +114,5 @@ class EvmContractApiSpec extends Specification {
         return UUID.randomUUID()
                 .toString()
     }
+
 }
