@@ -3,6 +3,7 @@ package org.omnione.did.ethereum.data;
 import lombok.Getter;
 import org.web3j.abi.datatypes.DynamicStruct;
 import org.web3j.abi.datatypes.Utf8String;
+import org.web3j.abi.datatypes.reflection.Parameterized;
 
 @Getter
 public class Provider extends DynamicStruct {
@@ -20,7 +21,10 @@ public class Provider extends DynamicStruct {
     this.certVcReference = certVcReference;
   }
 
-  public Provider(Utf8String did, Utf8String certVcReference) {
+  public Provider(
+      @Parameterized(type = Utf8String.class) Utf8String did,
+      @Parameterized(type = Utf8String.class) Utf8String certVcReference
+  ) {
     super(did, certVcReference);
     // Initialize the fields
     this.did = did.getValue();
