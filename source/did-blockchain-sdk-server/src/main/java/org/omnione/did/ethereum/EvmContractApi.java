@@ -230,26 +230,13 @@ public class EvmContractApi implements ContractApi {
       throw new IllegalArgumentException("TERMINATED status requires a terminated time");
     }
     DidKeyUrlParser parser = new DidKeyUrlParser(didKeyUrl);
+    List<Type> inputParams = createInputParamsForUpdateDidDocStatus(parser, didDocStatus);
+    List<TypeReference<?>> outputParams = Collections.emptyList();
+    ContractFunctionName functionName =
+        didDocStatus == DidDocStatus.REVOKED ? ContractFunctionName.FUNC_UPDATE_DID_DOC_STATUS_REVOCATION
+            : ContractFunctionName.FUNC_UPDATE_DID_DOC_STATUS_IN_SERVICE;
 
-    if (didDocStatus != DidDocStatus.REVOKED) {
-      List<Type> inputParams =
-          List.of(
-              new Utf8String(parser.getDid()), new Utf8String(didDocStatus.getRawValue()),
-              new Utf8String(parser.getVersionId())
-          );
-      List<TypeReference<?>> outputParams = Collections.emptyList();
-      contractData.setTransactionDetails(
-          ContractFunctionName.FUNC_UPDATE_DID_DOC_STATUS_IN_SERVICE, inputParams, outputParams);
-    } else {
-      List<Type> inputParams =
-          List.of(
-              new Utf8String(parser.getDid()), new Utf8String(didDocStatus.getRawValue()),
-              new Utf8String(Strings.EMPTY)
-          );
-      List<TypeReference<?>> outputParams = Collections.emptyList();
-      contractData.setTransactionDetails(
-          ContractFunctionName.FUNC_UPDATE_DID_DOC_STATUS_REVOCATION, inputParams, outputParams);
-    }
+    contractData.setTransactionDetails(functionName, inputParams, outputParams);
 
     byte[] result = send(contractData);
     if (result == null) {
@@ -258,6 +245,12 @@ public class EvmContractApi implements ContractApi {
     }
 
     return null;
+  }
+
+  private List<Type> createInputParamsForUpdateDidDocStatus(DidKeyUrlParser parser, DidDocStatus didDocStatus) {
+    String versionId = didDocStatus == DidDocStatus.REVOKED ? Strings.EMPTY : parser.getVersionId();
+    return List.of(new Utf8String(parser.getDid()), new Utf8String(didDocStatus.getRawValue()),
+        new Utf8String(versionId));
   }
 
   @Override
