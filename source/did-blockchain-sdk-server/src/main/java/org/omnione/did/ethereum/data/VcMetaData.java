@@ -3,7 +3,6 @@ package org.omnione.did.ethereum.data;
 import lombok.Getter;
 import org.web3j.abi.datatypes.DynamicStruct;
 import org.web3j.abi.datatypes.Utf8String;
-import org.web3j.abi.datatypes.reflection.Parameterized;
 
 @Getter
 public class VcMetaData extends DynamicStruct {
@@ -25,10 +24,9 @@ public class VcMetaData extends DynamicStruct {
       String language
   ) {
     super(
-        new Utf8String(id), new DynamicStruct(issuer), new Utf8String(subject),
-        new DynamicStruct(credentialSchema), new Utf8String(status), new Utf8String(issuanceDate),
-        new Utf8String(validFrom), new Utf8String(validUntil), new Utf8String(formatVersion),
-        new Utf8String(language)
+        new Utf8String(id), issuer, new Utf8String(subject), credentialSchema,
+        new Utf8String(status), new Utf8String(issuanceDate), new Utf8String(validFrom),
+        new Utf8String(validUntil), new Utf8String(formatVersion), new Utf8String(language)
     );
 
     this.id = id;
@@ -44,20 +42,13 @@ public class VcMetaData extends DynamicStruct {
   }
 
   public VcMetaData(
-      @Parameterized(type = Utf8String.class) Utf8String id,
-      @Parameterized(type = Provider.class) Provider issuer,
-      @Parameterized(type = Utf8String.class) Utf8String subject,
-      @Parameterized(type = CredentialSchema.class) CredentialSchema credentialSchema,
-      @Parameterized(type = Utf8String.class) Utf8String status,
-      @Parameterized(type = Utf8String.class) Utf8String issuanceDate,
-      @Parameterized(type = Utf8String.class) Utf8String validFrom,
-      @Parameterized(type = Utf8String.class) Utf8String validUntil,
-      @Parameterized(type = Utf8String.class) Utf8String formatVersion,
-      @Parameterized(type = Utf8String.class) Utf8String language
+      Utf8String id, Provider issuer, Utf8String subject, CredentialSchema credentialSchema,
+      Utf8String status, Utf8String issuanceDate, Utf8String validFrom, Utf8String validUntil,
+      Utf8String formatVersion, Utf8String language
   ) {
     super(
-        id, new DynamicStruct(issuer), subject, new DynamicStruct(credentialSchema), status,
-        issuanceDate, validFrom, validUntil, formatVersion, language
+        id, issuer, subject, credentialSchema, status, issuanceDate, validFrom, validUntil,
+        formatVersion, language
     );
 
     this.id = id.getValue();

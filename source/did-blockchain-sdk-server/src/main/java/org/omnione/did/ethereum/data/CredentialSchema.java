@@ -17,10 +17,7 @@ public class CredentialSchema extends DynamicStruct {
     this.credentialSchemaType = credentialSchemaType;
   }
 
-  public CredentialSchema(
-      @Parameterized(type = Utf8String.class) Utf8String url,
-      @Parameterized(type = Utf8String.class) Utf8String credentialSchemaType
-  ) {
+  public CredentialSchema(Utf8String url, Utf8String credentialSchemaType) {
     super(url, credentialSchemaType);
     this.url = url.getValue();
     this.credentialSchemaType = credentialSchemaType.getValue();
