@@ -24,10 +24,22 @@ public class EvmServerInformation extends ServerInformation {
       throw new IllegalArgumentException("Property 'evm.network.url' is missing or empty");
     }
 
-    this.chainId = parseLongProperty(properties, "evm.chainId");
-    this.gasLimit = parseLongProperty(properties, "evm.gas.limit");
-    this.gasPrice = parseLongProperty(properties, "evm.gas.price");
-    this.connectionTimeout = parseIntProperty(properties, "evm.connection.timeout");
+    this.chainId = parseLongProperty(
+        properties,
+        "evm.chainId"
+    );
+    this.gasLimit = parseLongProperty(
+        properties,
+        "evm.gas.limit"
+    );
+    this.gasPrice = parseLongProperty(
+        properties,
+        "evm.gas.price"
+    );
+    this.connectionTimeout = parseIntProperty(
+        properties,
+        "evm.connection.timeout"
+    );
   }
 
   private long parseLongProperty(Properties properties, String key) {

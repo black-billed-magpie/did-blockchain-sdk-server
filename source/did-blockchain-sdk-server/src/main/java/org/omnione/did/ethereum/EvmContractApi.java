@@ -22,6 +22,7 @@ import org.omnione.did.ethereum.data.VcMetaData;
 import org.omnione.did.ethereum.data.VerificationMethod;
 import org.omnione.exception.BlockChainException;
 import org.omnione.exception.BlockchainErrorCode;
+import org.omnione.generated.OpenDID;
 import org.omnione.sender.BlockChainType;
 import org.omnione.sender.SenderFactory;
 import org.omnione.sender.ethereum.ContractFunctionName;
@@ -58,12 +59,17 @@ public class EvmContractApi implements ContractApi {
     List<Type> inputParams = List.of(document);
     List<TypeReference<?>> outputParams = Collections.emptyList();
     contractData.setTransactionDetails(
-        ContractFunctionName.FUNC_REGIST_DID_DOCUMENT, inputParams, outputParams);
+        ContractFunctionName.FUNC_REGIST_DID_DOCUMENT,
+        inputParams,
+        outputParams
+    );
 
     byte[] result = send(contractData);
     if (result == null) {
       throw new BlockChainException(
-          BlockchainErrorCode.TRANSACTION_ERROR, new Error("Transaction failed"));
+          BlockchainErrorCode.TRANSACTION_ERROR,
+          new Error("Transaction failed")
+      );
     }
 
     LOG.info("Transaction successful: " + new String(result));
@@ -75,7 +81,10 @@ public class EvmContractApi implements ContractApi {
 
     DynamicArray<Utf8String> context = new DynamicArray<>(
         Utf8String.class,
-        org.web3j.abi.Utils.typeMap(didDocument.getContext(), Utf8String.class)
+        org.web3j.abi.Utils.typeMap(
+            didDocument.getContext(),
+            Utf8String.class
+        )
     );
 
     Utf8String id = new Utf8String(didDocument.getId());
@@ -87,46 +96,79 @@ public class EvmContractApi implements ContractApi {
     List<VerificationMethod> verificationMethodList = didDocument.getVerificationMethod()
         .stream()
         .map(value -> new VerificationMethod(
-            value.getId(), new BigInteger(value.getType()), value.getController(),
-            value.getPublicKeyMultibase(), new BigInteger(String.valueOf(value.getAuthType()))
+            value.getId(),
+            new BigInteger(value.getType()),
+            value.getController(),
+            value.getPublicKeyMultibase(),
+            new BigInteger(String.valueOf(value.getAuthType()))
         ))
         .toList();
-    DynamicArray<VerificationMethod> verificationMethod =
-        new DynamicArray<>(VerificationMethod.class, verificationMethodList);
-    DynamicArray<Utf8String> assertionsMethod =
-        new DynamicArray<>(
-            Utf8String.class,
-            org.web3j.abi.Utils.typeMap(didDocument.getAssertionMethod(), Utf8String.class)
-        );
-    DynamicArray<Utf8String> authentication =
-        new DynamicArray<>(
-            Utf8String.class,
-            org.web3j.abi.Utils.typeMap(didDocument.getAuthentication(), Utf8String.class)
-        );
-    DynamicArray<Utf8String> keyAgreement =
-        new DynamicArray<>(
-            Utf8String.class,
-            org.web3j.abi.Utils.typeMap(didDocument.getKeyAgreement(), Utf8String.class)
-        );
-    DynamicArray<Utf8String> capabilityInvocation =
-        new DynamicArray<>(
-            Utf8String.class,
-            org.web3j.abi.Utils.typeMap(didDocument.getCapabilityInvocation(), Utf8String.class)
-        );
-    DynamicArray<Utf8String> capabilityDelegation =
-        new DynamicArray<>(
-            Utf8String.class,
-            org.web3j.abi.Utils.typeMap(didDocument.getCapabilityDelegation(), Utf8String.class)
-        );
+    DynamicArray<VerificationMethod> verificationMethod = new DynamicArray<>(
+        VerificationMethod.class,
+        verificationMethodList
+    );
+    DynamicArray<Utf8String> assertionsMethod = new DynamicArray<>(
+        Utf8String.class,
+        org.web3j.abi.Utils.typeMap(
+            didDocument.getAssertionMethod(),
+            Utf8String.class
+        )
+    );
+    DynamicArray<Utf8String> authentication = new DynamicArray<>(
+        Utf8String.class,
+        org.web3j.abi.Utils.typeMap(
+            didDocument.getAuthentication(),
+            Utf8String.class
+        )
+    );
+    DynamicArray<Utf8String> keyAgreement = new DynamicArray<>(
+        Utf8String.class,
+        org.web3j.abi.Utils.typeMap(
+            didDocument.getKeyAgreement(),
+            Utf8String.class
+        )
+    );
+    DynamicArray<Utf8String> capabilityInvocation = new DynamicArray<>(
+        Utf8String.class,
+        org.web3j.abi.Utils.typeMap(
+            didDocument.getCapabilityInvocation(),
+            Utf8String.class
+        )
+    );
+    DynamicArray<Utf8String> capabilityDelegation = new DynamicArray<>(
+        Utf8String.class,
+        org.web3j.abi.Utils.typeMap(
+            didDocument.getCapabilityDelegation(),
+            Utf8String.class
+        )
+    );
     List<Service> servicesList = didDocument.getService()
         .stream()
-        .map(value -> new Service(value.getId(), value.getType(), value.getServiceEndpoint()))
+        .map(value -> new Service(
+            value.getId(),
+            value.getType(),
+            value.getServiceEndpoint()
+        ))
         .toList();
-    DynamicArray<Service> services = new DynamicArray<>(Service.class, servicesList);
+    DynamicArray<Service> services = new DynamicArray<>(
+        Service.class,
+        servicesList
+    );
 
     return new Document(
-        context, id, controller, created, updated, versionId, deactivated, verificationMethod,
-        assertionsMethod, authentication, keyAgreement, capabilityInvocation, capabilityDelegation,
+        context,
+        id,
+        controller,
+        created,
+        updated,
+        versionId,
+        deactivated,
+        verificationMethod,
+        assertionsMethod,
+        authentication,
+        keyAgreement,
+        capabilityInvocation,
+        capabilityDelegation,
         services
     );
   }
@@ -138,39 +180,39 @@ public class EvmContractApi implements ContractApi {
     List<TypeReference<?>> outputParams = List.of(new TypeReference<Document>() {
     });
     contractData.setTransactionDetails(
-        ContractFunctionName.FUNC_GET_DOCUMENT, inputParams, outputParams);
+        ContractFunctionName.FUNC_GET_DOCUMENT,
+        inputParams,
+        outputParams
+    );
 
     byte[] documentBytes = send(contractData);
     if (documentBytes == null) {
       throw new BlockChainException(
-          BlockchainErrorCode.TRANSACTION_ERROR, new Error("Transaction failed"));
+          BlockchainErrorCode.TRANSACTION_ERROR,
+          new Error("Transaction failed")
+      );
 
     }
-    List<Type> decodedData =
-        FunctionReturnDecoder.decode(new String(documentBytes), Utils.convert(outputParams));
+    List<Type> decodedData = FunctionReturnDecoder.decode(
+        new String(documentBytes),
+        Utils.convert(outputParams)
+    );
 
     List<Type> decodedDynamicStruct = ((DynamicStruct) decodedData.get(0)).getValue();
     DidDocument didDocument = new DidDocument();
-    didDocument.setContext(
-        mapDynamicArrayToList((DynamicArray<Utf8String>) decodedDynamicStruct.get(0)));
+    didDocument.setContext(mapDynamicArrayToList((DynamicArray<Utf8String>) decodedDynamicStruct.get(0)));
     didDocument.setId(((Utf8String) decodedDynamicStruct.get(1)).getValue());
     didDocument.setController(((Utf8String) decodedDynamicStruct.get(2)).getValue());
     didDocument.setCreated(((Utf8String) decodedDynamicStruct.get(3)).getValue());
     didDocument.setUpdated(((Utf8String) decodedDynamicStruct.get(4)).getValue());
     didDocument.setVersionId(((Utf8String) decodedDynamicStruct.get(5)).getValue());
     didDocument.setDeactivated(((Bool) decodedDynamicStruct.get(6)).getValue());
-    didDocument.setVerificationMethod(
-        mapVerificationMethod((DynamicArray<DynamicStruct>) decodedDynamicStruct.get(7)));
-    didDocument.setAssertionMethod(
-        mapDynamicArrayToList((DynamicArray<Utf8String>) decodedDynamicStruct.get(8)));
-    didDocument.setAuthentication(
-        mapDynamicArrayToList((DynamicArray<Utf8String>) decodedDynamicStruct.get(9)));
-    didDocument.setKeyAgreement(
-        mapDynamicArrayToList((DynamicArray<Utf8String>) decodedDynamicStruct.get(10)));
-    didDocument.setCapabilityInvocation(
-        mapDynamicArrayToList((DynamicArray<Utf8String>) decodedDynamicStruct.get(11)));
-    didDocument.setCapabilityDelegation(
-        mapDynamicArrayToList((DynamicArray<Utf8String>) decodedDynamicStruct.get(12)));
+    didDocument.setVerificationMethod(mapVerificationMethod((DynamicArray<DynamicStruct>) decodedDynamicStruct.get(7)));
+    didDocument.setAssertionMethod(mapDynamicArrayToList((DynamicArray<Utf8String>) decodedDynamicStruct.get(8)));
+    didDocument.setAuthentication(mapDynamicArrayToList((DynamicArray<Utf8String>) decodedDynamicStruct.get(9)));
+    didDocument.setKeyAgreement(mapDynamicArrayToList((DynamicArray<Utf8String>) decodedDynamicStruct.get(10)));
+    didDocument.setCapabilityInvocation(mapDynamicArrayToList((DynamicArray<Utf8String>) decodedDynamicStruct.get(11)));
+    didDocument.setCapabilityDelegation(mapDynamicArrayToList((DynamicArray<Utf8String>) decodedDynamicStruct.get(12)));
     didDocument.setService(mapServices((DynamicArray<DynamicStruct>) decodedDynamicStruct.get(13)));
 
     return didDocument;
@@ -214,8 +256,7 @@ public class EvmContractApi implements ContractApi {
               new org.omnione.did.data.model.did.Service();
           service.setId(((Utf8String) values.get(0)).getValue());
           service.setType(((Utf8String) values.get(1)).getValue());
-          service.setServiceEndpoint(
-              mapDynamicArrayToList((DynamicArray<Utf8String>) values.get(2)));
+          service.setServiceEndpoint(mapDynamicArrayToList((DynamicArray<Utf8String>) values.get(2)));
 
           return service;
         })
@@ -230,33 +271,46 @@ public class EvmContractApi implements ContractApi {
       throw new IllegalArgumentException("TERMINATED status requires a terminated time");
     }
     DidKeyUrlParser parser = new DidKeyUrlParser(didKeyUrl);
-    List<Type> inputParams = createInputParamsForUpdateDidDocStatus(parser, didDocStatus);
+    List<Type> inputParams = createInputParamsForUpdateDidDocStatus(
+        parser,
+        didDocStatus
+    );
     List<TypeReference<?>> outputParams = Collections.emptyList();
-    ContractFunctionName functionName =
-        didDocStatus == DidDocStatus.REVOKED ? ContractFunctionName.FUNC_UPDATE_DID_DOC_STATUS_REVOCATION
-            : ContractFunctionName.FUNC_UPDATE_DID_DOC_STATUS_IN_SERVICE;
+    ContractFunctionName functionName = didDocStatus == DidDocStatus.REVOKED
+        ? ContractFunctionName.FUNC_UPDATE_DID_DOC_STATUS_REVOCATION
+        : ContractFunctionName.FUNC_UPDATE_DID_DOC_STATUS_IN_SERVICE;
 
-    contractData.setTransactionDetails(functionName, inputParams, outputParams);
+    contractData.setTransactionDetails(
+        functionName,
+        inputParams,
+        outputParams
+    );
 
     byte[] result = send(contractData);
     if (result == null) {
       throw new BlockChainException(
-          BlockchainErrorCode.TRANSACTION_ERROR, new Error("Transaction failed"));
+          BlockchainErrorCode.TRANSACTION_ERROR,
+          new Error("Transaction failed")
+      );
     }
 
     return null;
   }
 
-  private List<Type> createInputParamsForUpdateDidDocStatus(DidKeyUrlParser parser, DidDocStatus didDocStatus) {
+  private List<Type> createInputParamsForUpdateDidDocStatus(DidKeyUrlParser parser,
+                                                            DidDocStatus didDocStatus
+  ) {
     String versionId = didDocStatus == DidDocStatus.REVOKED ? Strings.EMPTY : parser.getVersionId();
-    return List.of(new Utf8String(parser.getDid()), new Utf8String(didDocStatus.getRawValue()),
-        new Utf8String(versionId));
+    return List.of(
+        new Utf8String(parser.getDid()),
+        new Utf8String(didDocStatus.getRawValue()),
+        new Utf8String(versionId)
+    );
   }
 
   @Override
-  public Object updateDidDocStatus(
-      String didKeyUrl, DidDocStatus didDocStatus,
-      LocalDateTime terminatedTime
+  public Object updateDidDocStatus(String didKeyUrl, DidDocStatus didDocStatus,
+                                   LocalDateTime terminatedTime
   ) throws BlockChainException {
     return null;
   }
@@ -265,17 +319,37 @@ public class EvmContractApi implements ContractApi {
   public void registVcMetadata(VcMeta vcMeta) throws BlockChainException {
 
     var vcMetaData = convertVcMetaToVcMetaData(vcMeta);
-    List<Type> inputParams = List.of(vcMetaData);
-    List<TypeReference<?>> outputParams = Collections.emptyList();
 
-    contractData.setTransactionDetails(
-        ContractFunctionName.FUNC_REGIST_VC_METADATA, inputParams, outputParams);
 
-    byte[] result = send(contractData);
-    if (result == null) {
-      throw new BlockChainException(
-          BlockchainErrorCode.TRANSACTION_ERROR, new Error("Transaction failed"));
-    }
+  }
+
+  public OpenDID.VcMeta convertVcMeta(VcMeta vcMeta) {
+    var provider = new OpenDID.Provider(
+        vcMeta.getIssuer()
+            .getDid(),
+        vcMeta.getIssuer()
+            .getCertVcRef()
+    );
+
+    var credentialSchema = new OpenDID.CredentialSchema(
+        vcMeta.getCredentialSchema()
+            .getId(),
+        vcMeta.getCredentialSchema()
+            .getType()
+    );
+
+    return new OpenDID.VcMeta(
+        vcMeta.getId(),
+        provider,
+        vcMeta.getSubject(),
+        credentialSchema,
+        vcMeta.getStatus(),
+        vcMeta.getIssuanceDate(),
+        vcMeta.getValidFrom(),
+        vcMeta.getValidUntil(),
+        vcMeta.getFormatVersion(),
+        vcMeta.getLanguage()
+    );
   }
 
   private VcMetaData convertVcMetaToVcMetaData(VcMeta vcMeta) {
@@ -286,7 +360,10 @@ public class EvmContractApi implements ContractApi {
         .getDid());
     var certVcRef = new Utf8String(vcMeta.getIssuer()
         .getCertVcRef());
-    var provider = new Provider(did, certVcRef);
+    var provider = new Provider(
+        did,
+        certVcRef
+    );
 
     var subject = new Utf8String(vcMeta.getSubject());
 
@@ -294,7 +371,10 @@ public class EvmContractApi implements ContractApi {
         .getId());
     var credentialSchemaType = new Utf8String(vcMeta.getCredentialSchema()
         .getType());
-    var credentialSchema = new CredentialSchema(credentialSchemaURL, credentialSchemaType);
+    var credentialSchema = new CredentialSchema(
+        credentialSchemaURL,
+        credentialSchemaType
+    );
 
     var status = new Utf8String(vcMeta.getStatus());
     var issuanceDate = new Utf8String(vcMeta.getIssuanceDate());
@@ -304,8 +384,16 @@ public class EvmContractApi implements ContractApi {
     var language = new Utf8String(vcMeta.getLanguage());
 
     return new VcMetaData(
-        id, provider, subject, credentialSchema, status, issuanceDate, validFrom,
-        validUntil, formatVersion, language
+        id,
+        provider,
+        subject,
+        credentialSchema,
+        status,
+        issuanceDate,
+        validFrom,
+        validUntil,
+        formatVersion,
+        language
     );
   }
 
@@ -316,16 +404,24 @@ public class EvmContractApi implements ContractApi {
     List<TypeReference<?>> outputParams = List.of(new TypeReference<VcMetaData>() {
     });
     contractData.setTransactionDetails(
-        ContractFunctionName.FUNC_GET_VC_METADATA, inputParams, outputParams);
+        ContractFunctionName.FUNC_GET_VC_METADATA,
+        inputParams,
+        outputParams
+    );
 
     byte[] vcMetaBytes = send(contractData);
     if (vcMetaBytes == null) {
       throw new BlockChainException(
-          BlockchainErrorCode.TRANSACTION_ERROR, new Error("Transaction failed"));
+          BlockchainErrorCode.TRANSACTION_ERROR,
+          new Error("Transaction failed")
+      );
     }
+    LOG.info("Transaction successful: " + new String(vcMetaBytes));
 
-    List<Type> decodedData =
-        FunctionReturnDecoder.decode(new String(vcMetaBytes), Utils.convert(outputParams));
+    List<Type> decodedData = FunctionReturnDecoder.decode(
+        new String(vcMetaBytes),
+        Utils.convert(outputParams)
+    );
 
     List<Type> decodedDynamicStruct = ((DynamicStruct) decodedData.get(0)).getValue();
 
@@ -361,11 +457,31 @@ public class EvmContractApi implements ContractApi {
 
   @Override
   public void updateVcStatus(String vcId, VcStatus vcStatus) throws BlockChainException {
+    List<Type> inputParams = List.of(
+        new Utf8String(vcId),
+        new Utf8String(vcStatus.getRawValue())
+    );
+    List<TypeReference<?>> outputParams = Collections.emptyList();
+    contractData.setTransactionDetails(
+        ContractFunctionName.FUNC_UPDATE_VC_STATS,
+        inputParams,
+        outputParams
+    );
 
+    byte[] result = send(contractData);
+    if (result == null) {
+      throw new BlockChainException(
+          BlockchainErrorCode.TRANSACTION_ERROR,
+          new Error("Transaction failed")
+      );
+    }
   }
 
   private byte[] send(EvmContractData evmContractData) throws BlockChainException {
     EvmSender sender = (EvmSender) SenderFactory.getSender(BlockChainType.EVM);
-    return sender.sendTransaction(this.serverInformation, evmContractData);
+    return sender.sendTransaction(
+        this.serverInformation,
+        evmContractData
+    );
   }
 }
