@@ -17,9 +17,7 @@ import org.omnione.did.data.model.vc.VcMeta;
 import org.omnione.did.ethereum.data.CredentialSchema;
 import org.omnione.did.ethereum.data.Document;
 import org.omnione.did.ethereum.data.Provider;
-import org.omnione.did.ethereum.data.Service;
 import org.omnione.did.ethereum.data.VcMetaData;
-import org.omnione.did.ethereum.data.VerificationMethod;
 import org.omnione.exception.BlockChainException;
 import org.omnione.exception.BlockchainErrorCode;
 import org.omnione.generated.OpenDID;
@@ -75,27 +73,13 @@ public class EvmContractApi implements ContractApi {
     LOG.info("Transaction successful: " + new String(result));
   }
 
-  private Document convertJsonToDocument(String json) {
+  private OpenDID.Document convertJsonToDocument(String json) {
     DidDocument didDocument = new DidDocument();
     didDocument.fromJson(json);
 
-    DynamicArray<Utf8String> context = new DynamicArray<>(
-        Utf8String.class,
-        org.web3j.abi.Utils.typeMap(
-            didDocument.getContext(),
-            Utf8String.class
-        )
-    );
-
-    Utf8String id = new Utf8String(didDocument.getId());
-    Utf8String controller = new Utf8String(didDocument.getController());
-    Utf8String created = new Utf8String(didDocument.getCreated());
-    Utf8String updated = new Utf8String(didDocument.getUpdated());
-    Utf8String versionId = new Utf8String(didDocument.getVersionId());
-    Bool deactivated = new Bool(didDocument.getDeactivated());
-    List<VerificationMethod> verificationMethodList = didDocument.getVerificationMethod()
+    var verificationMethodList = didDocument.getVerificationMethod()
         .stream()
-        .map(value -> new VerificationMethod(
+        .map(value -> new OpenDID.VerificationMethod(
             value.getId(),
             new BigInteger(value.getType()),
             value.getController(),
@@ -103,73 +87,29 @@ public class EvmContractApi implements ContractApi {
             new BigInteger(String.valueOf(value.getAuthType()))
         ))
         .toList();
-    DynamicArray<VerificationMethod> verificationMethod = new DynamicArray<>(
-        VerificationMethod.class,
-        verificationMethodList
-    );
-    DynamicArray<Utf8String> assertionsMethod = new DynamicArray<>(
-        Utf8String.class,
-        org.web3j.abi.Utils.typeMap(
-            didDocument.getAssertionMethod(),
-            Utf8String.class
-        )
-    );
-    DynamicArray<Utf8String> authentication = new DynamicArray<>(
-        Utf8String.class,
-        org.web3j.abi.Utils.typeMap(
-            didDocument.getAuthentication(),
-            Utf8String.class
-        )
-    );
-    DynamicArray<Utf8String> keyAgreement = new DynamicArray<>(
-        Utf8String.class,
-        org.web3j.abi.Utils.typeMap(
-            didDocument.getKeyAgreement(),
-            Utf8String.class
-        )
-    );
-    DynamicArray<Utf8String> capabilityInvocation = new DynamicArray<>(
-        Utf8String.class,
-        org.web3j.abi.Utils.typeMap(
-            didDocument.getCapabilityInvocation(),
-            Utf8String.class
-        )
-    );
-    DynamicArray<Utf8String> capabilityDelegation = new DynamicArray<>(
-        Utf8String.class,
-        org.web3j.abi.Utils.typeMap(
-            didDocument.getCapabilityDelegation(),
-            Utf8String.class
-        )
-    );
-    List<Service> servicesList = didDocument.getService()
+    var servicesList = didDocument.getService()
         .stream()
-        .map(value -> new Service(
+        .map(value -> new OpenDID.Service(
             value.getId(),
             value.getType(),
             value.getServiceEndpoint()
         ))
         .toList();
-    DynamicArray<Service> services = new DynamicArray<>(
-        Service.class,
+    return new OpenDID.Document(
+        didDocument.getContext(),
+        didDocument.getId(),
+        didDocument.getController(),
+        didDocument.getCreated(),
+        didDocument.getUpdated(),
+        didDocument.getVersionId(),
+        didDocument.getDeactivated(),
+        verificationMethodList,
+        didDocument.getAssertionMethod(),
+        didDocument.getAuthentication(),
+        didDocument.getKeyAgreement(),
+        didDocument.getCapabilityInvocation(),
+        didDocument.getCapabilityDelegation(),
         servicesList
-    );
-
-    return new Document(
-        context,
-        id,
-        controller,
-        created,
-        updated,
-        versionId,
-        deactivated,
-        verificationMethod,
-        assertionsMethod,
-        authentication,
-        keyAgreement,
-        capabilityInvocation,
-        capabilityDelegation,
-        services
     );
   }
 
