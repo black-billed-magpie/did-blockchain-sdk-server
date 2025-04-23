@@ -40,12 +40,7 @@ public class EvmReadOnlyTransaction {
         gasProvider
     );
 
-    return switch (contractFunctionName) {
-      case FUNC_GET_DOCUMENT -> openDID.getDidDoc((String) args.get(0))
-          .send();
-      default -> throw new IllegalArgumentException(
-          "Unsupported contract function name: " + contractFunctionName);
-    };
+    return null;
   }
 
 }
