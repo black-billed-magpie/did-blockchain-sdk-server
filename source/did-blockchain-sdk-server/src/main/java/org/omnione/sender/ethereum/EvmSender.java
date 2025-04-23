@@ -10,8 +10,8 @@ import org.omnione.exception.BlockchainErrorCode;
 import org.omnione.sender.ContractData;
 import org.omnione.sender.OpenDidSender;
 import org.omnione.sender.ServerInformation;
-import org.web3j.abi.datatypes.DynamicStruct;
 import org.web3j.protocol.Web3j;
+import org.web3j.protocol.core.methods.response.TransactionReceipt;
 import org.web3j.protocol.http.HttpService;
 
 @NoArgsConstructor
@@ -45,11 +45,9 @@ public class EvmSender implements OpenDidSender {
 
       if (ethereumContractData.getIsView()) {
         logger.info("Executing view function...");
-        EvmReadOnlyTransaction evmReadOnlyTransaction = new EvmReadOnlyTransaction(
-            ethereumServerInformation,
-            ethereumContractData
-        );
-        DynamicStruct response = evmReadOnlyTransaction.send(
+        EvmReadOnlyTransaction evmReadOnlyTransaction =
+            new EvmReadOnlyTransaction(ethereumContractData);
+        String response = evmReadOnlyTransaction.send(
             web3j,
             BigInteger.valueOf(ethereumServerInformation.getGasPrice()),
             BigInteger.valueOf(ethereumServerInformation.getGasLimit()),
@@ -57,25 +55,31 @@ public class EvmSender implements OpenDidSender {
             ethereumContractData.getInputParameters()
         );
 
-        return response.getValue()
-            .get(0)
-            .getValue()
-            .toString()
-            .getBytes(CHARSET);
+        return response.getBytes(CHARSET);
 
       } else {
         logger.info("Executing transaction function...");
         EvmInvokeTransaction evmInvokeTransaction = new EvmInvokeTransaction(ethereumContractData);
-        Object response = evmInvokeTransaction.send(
+        logger.info("Sending transaction...");
+
+        TransactionReceipt response = evmInvokeTransaction.send(
             web3j,
             BigInteger.valueOf(ethereumServerInformation.getGasPrice()),
             BigInteger.valueOf(ethereumServerInformation.getGasLimit()),
             ethereumContractData.getFunctionName(),
             ethereumContractData.getInputParameters()
         );
-
-        return response.toString()
-            .getBytes(CHARSET);
+        logger.info("Transaction sent successfully.");
+        if (response.isStatusOK()) {
+          logger.info("Transaction executed successfully. Transaction hash: " +
+                      response.getTransactionHash());
+          return response.getStatus()
+              .getBytes(CHARSET);
+        } else {
+          logger.warning("Transaction failed with status: " + response.getStatus());
+          return response.getStatus()
+              .getBytes(CHARSET);
+        }
       }
     } catch (Exception e) {
       logger.severe("Transaction process failed: " + e.getMessage());

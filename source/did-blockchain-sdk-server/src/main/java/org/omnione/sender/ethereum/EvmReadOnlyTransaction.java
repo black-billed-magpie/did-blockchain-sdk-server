@@ -3,28 +3,21 @@ package org.omnione.sender.ethereum;
 import java.math.BigInteger;
 import java.util.List;
 import org.omnione.generated.OpenDID;
-import org.web3j.abi.datatypes.DynamicStruct;
-import org.web3j.abi.datatypes.Type;
 import org.web3j.crypto.Credentials;
 import org.web3j.protocol.Web3j;
 import org.web3j.tx.ReadonlyTransactionManager;
 import org.web3j.tx.gas.StaticGasProvider;
 
-public class EvmReadOnlyTransaction implements EvmTransaction {
+public class EvmReadOnlyTransaction {
 
-  private final EvmServerInformation serverInformation;
   private final EvmContractData evmContractData;
 
-  public EvmReadOnlyTransaction(EvmServerInformation serverInformation,
-                                EvmContractData evmContractData
-  ) {
-    this.serverInformation = serverInformation;
+  public EvmReadOnlyTransaction(EvmContractData evmContractData) {
     this.evmContractData = evmContractData;
   }
 
-  @Override
-  public DynamicStruct send(Web3j web3j, BigInteger gasPrice, BigInteger gasLimit,
-                            ContractFunctionName contractFunctionName, List<Type> args
+  public String send(Web3j web3j, BigInteger gasPrice, BigInteger gasLimit,
+                     ContractFunctionName contractFunctionName, List<Object> args
   ) throws Exception {
 
     Credentials credentials = Credentials.create(this.evmContractData.getPrivateKey());
@@ -48,11 +41,7 @@ public class EvmReadOnlyTransaction implements EvmTransaction {
     );
 
     return switch (contractFunctionName) {
-      case FUNC_GET_DOCUMENT -> openDID.getDidDoc((String) args.get(0)
-              .getValue())
-          .send();
-      case FUNC_GET_VC_METADATA -> openDID.getVcmetaData((String) args.get(0)
-              .getValue())
+      case FUNC_GET_DOCUMENT -> openDID.getDidDoc((String) args.get(0))
           .send();
       default -> throw new IllegalArgumentException(
           "Unsupported contract function name: " + contractFunctionName);

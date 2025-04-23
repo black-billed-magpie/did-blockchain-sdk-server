@@ -14,7 +14,7 @@ public class EvmContractData extends ContractData {
   private final String contractAddress;
   private final String privateKey;
   private ContractFunctionName functionName;
-  private List<Type> inputParameters;
+  private List<Object> inputParameters;
   private List<TypeReference<?>> outputParameters;
   private Boolean isView;
 
@@ -28,7 +28,7 @@ public class EvmContractData extends ContractData {
   }
 
   public void setTransactionDetails(ContractFunctionName contractFunctionName,
-                                    List<Type> inputParameters,
+                                    List<Object> inputParameters,
                                     List<TypeReference<?>> outputParameters
   ) {
     this.functionName = contractFunctionName;
