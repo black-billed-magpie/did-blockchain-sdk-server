@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *      http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -21,7 +21,10 @@ import org.omnione.did.data.model.did.InvokedDidDoc;
 import org.omnione.did.data.model.enums.did.DidDocStatus;
 import org.omnione.did.data.model.enums.vc.RoleType;
 import org.omnione.did.data.model.enums.vc.VcStatus;
+import org.omnione.did.data.model.schema.VcSchema;
 import org.omnione.did.data.model.vc.VcMeta;
+import org.omnione.did.data.model.zkp.ZKPCredentialDefinition;
+import org.omnione.did.data.model.zkp.ZKPCredentialSchema;
 import org.omnione.exception.BlockChainException;
 
 
@@ -70,9 +73,9 @@ public interface ContractApi {
    * @return the updated DID Document
    * @throws BlockChainException if an error occurs during the update process
    */
-  Object updateDidDocStatus(
-      String didKeyUrl, DidDocStatus didDocStatus, LocalDateTime terminatedTime)
-      throws BlockChainException;
+  Object updateDidDocStatus(String didKeyUrl, DidDocStatus didDocStatus,
+                            LocalDateTime terminatedTime
+  ) throws BlockChainException;
 
   /**
    * Registers VC Metadata on the blockchain.
@@ -99,4 +102,17 @@ public interface ContractApi {
    * @throws BlockChainException if an error occurs during the update process
    */
   void updateVcStatus(String vcId, VcStatus vcStatus) throws BlockChainException;
+
+  void registVcSchema(VcSchema vcSchema) throws BlockChainException;
+
+  Object getVcSchema(String schemaId) throws BlockChainException;
+
+  void registZKPCredential(ZKPCredentialSchema credentialSchema) throws BlockChainException;
+
+  Object getZKPCredential(String schemaId) throws BlockChainException;
+
+  void registZKPCredentialDefinition(ZKPCredentialDefinition credentialDefinition)
+      throws BlockChainException;
+
+  Object getZKPCredentialDefinition(String definitionId) throws BlockChainException;
 }

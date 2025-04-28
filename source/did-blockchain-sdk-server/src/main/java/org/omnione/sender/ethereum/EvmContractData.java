@@ -6,7 +6,6 @@ import java.util.Properties;
 import lombok.Getter;
 import org.omnione.sender.ContractData;
 import org.web3j.abi.TypeReference;
-import org.web3j.abi.datatypes.Type;
 
 @Getter
 public class EvmContractData extends ContractData {
@@ -25,15 +24,5 @@ public class EvmContractData extends ContractData {
 
     this.contractAddress = properties.getProperty("evm.contract.address");
     this.privateKey = properties.getProperty("evm.contract.privateKey");
-  }
-
-  public void setTransactionDetails(ContractFunctionName contractFunctionName,
-                                    List<Object> inputParameters,
-                                    List<TypeReference<?>> outputParameters
-  ) {
-    this.functionName = contractFunctionName;
-    this.inputParameters = inputParameters;
-    this.outputParameters = outputParameters;
-    this.isView = contractFunctionName.getIsViewFunction();
   }
 }
