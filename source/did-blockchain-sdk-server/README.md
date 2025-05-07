@@ -1,6 +1,6 @@
 # Server Blockchain SDK Guide
 
-This document serves as a guide for using the OpenDID Server Blockchain SDK. It provides functionality to invoke chaincode and generate transaction requests necessary to record DID Document and Verifiable Credential Metadata (VC Meta) information on the blockchain for OpenDID.
+This document serves as a guide for using the OpenDID Server Blockchain SDK. It provides functionality to invoke contract and generate transaction requests necessary to record DID Document and Verifiable Credential Metadata (VC Meta) information on the blockchain for OpenDID.
 
 ## S/W Specifications
 
@@ -42,14 +42,15 @@ This document serves as a guide for using the OpenDID Server Blockchain SDK. It 
 
 ## API Documentation
 
-| Category          | API Documentation Link                                                     |
-| ----------------- | -------------------------------------------------------------------------- |
-| FabricContractApi | [Blockchain SDK - FabricContractApi API](../../docs/api/Blockchain_API.md) |
-| ErrorCode         | [Error Code](../../docs/api/BlockchainErrorCode.md)                        |
+| Category          | API Documentation Link                                                      |
+| ----------------- | --------------------------------------------------------------------------- |
+| FabricContractApi | [Blockchain SDK - FabricContractApi API](../../docs/api/Blockchain_API.md)  |
+| EvmContractApi    | [Blockchain SDK - EvmContractApi API](../../docs/api/Blockchain_EVM_API.md) |
+| ErrorCode         | [Error Code](../../docs/api/BlockchainErrorCode.md)                         |
 
-### FabricContractApi
+### ContractApi
 
-The FabricContractApi provides functionality to interact with chaincode by creating transactions related to DID documents and VC Meta, based on the Blockchain Network configuration information.<br>Key features include:
+The ContractApi provides functionality to interact with chaincode by creating transactions related to DID documents and VC Meta, based on the Blockchain Network configuration information.<br>Key features include:
 
 * <b>Register DID Document</b>: Registers a new DID document and saves its state.
 * <b>Update DID Document</b>: Modifies an existing DID document.
