@@ -26,6 +26,8 @@ puppeteer:
 | ------- | ---------- | --------------- |
 | v1.0.0  | 2025-05-07 | Initial version |
 
+
+
 ## Table of Contents
 
 - [1. DID Document Registration](#1-did-document-registration)
@@ -36,6 +38,21 @@ puppeteer:
 - [4. VC Metadata Registration](#4-vc-metadata-registration)
 - [5. VC Metadata Retrieval](#5-vc-metadata-retrieval)
 - [6. VC Status Change](#6-vc-status-change)
+
+## Properties
+
+```properties
+# EVM Network Configuration
+evm.network.url=http://localhost:8083      # The URL of the EVM network to connect to
+evm.chainId=1337                           # The unique identifier for the blockchain network (Chain ID)
+evm.gas.limit=100000000                    # The maximum amount of gas allowed for transactions
+evm.gas.price=0                            # The price of gas per unit (set to 0 for testing purposes)
+evm.connection.timeout=10000               # The timeout duration (in milliseconds) for network connections
+
+# EVM Contract Configuration
+evm.contract.address=0xa0E49611FB410c00f425E83A4240e1681c51DDf4  # The address of the deployed smart contract
+evm.contract.privateKey=0x8f2a55949038a9610f50fb23b5883af3b4ecb3c3bb792cbcefbd1542c692be63  # The private key for signing transactions
+```
 
 ## Feature List
 
