@@ -73,8 +73,8 @@ public interface ContractApi {
    * @return the updated DID Document
    * @throws BlockChainException if an error occurs during the update process
    */
-  Object updateDidDocStatus(String didKeyUrl, DidDocStatus didDocStatus,
-                            LocalDateTime terminatedTime
+  Object updateDidDocStatus(
+      String didKeyUrl, DidDocStatus didDocStatus, LocalDateTime terminatedTime
   ) throws BlockChainException;
 
   /**

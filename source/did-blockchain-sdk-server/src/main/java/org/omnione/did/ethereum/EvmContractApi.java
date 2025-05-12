@@ -31,6 +31,7 @@ import org.omnione.generated.OpenDID.CredentialDefinition;
 import org.omnione.generated.OpenDID.CredentialSubject;
 import org.omnione.generated.OpenDID.SchemaClaimItem;
 import org.omnione.generated.OpenDID.ZKPLibrary_CredentialSchema;
+import org.omnione.response.EvmResponse;
 import org.omnione.sender.ethereum.EvmContractData;
 import org.omnione.sender.ethereum.EvmServerInformation;
 import org.omnione.util.DidKeyUrlParser;
@@ -149,6 +150,17 @@ public class EvmContractApi implements ContractApi {
       );
 
       return contractFunction.apply(contract);
+    } catch (ContractCallException e) {
+      logger.error(
+          "Error executing contract function: " + e.getMessage(),
+          e
+      );
+
+      throw new BlockChainException(
+          BlockchainErrorCode.TRANSACTION_ERROR,
+          e
+      );
+
     } catch (Exception e) {
       logger.error(
           "Error executing contract function: " + e.getMessage(),
@@ -270,44 +282,33 @@ public class EvmContractApi implements ContractApi {
     if (didDocStatus == DidDocStatus.TERMINATED) {
       throw new IllegalArgumentException("TERMINATED status requires a terminated time");
     }
-    DidKeyUrlParser parser = new DidKeyUrlParser(didKeyUrl);
-    try (Web3j web3j = Web3j.build(new HttpService(serverInformation.getNetworkURL()))) {
-      Credentials credentials = Credentials.create(contractData.getPrivateKey());
-      BigInteger gasPrice = web3j.ethGasPrice()
-          .send()
-          .getGasPrice();
-      BigInteger gasLimit = BigInteger.valueOf(10000000L);
-      StaticGasProvider gasProvider = new StaticGasProvider(
-          gasPrice,
-          gasLimit
-      );
 
-      var contract = OpenDID.load(
-          contractData.getContractAddress(),
-          web3j,
-          credentials,
-          gasProvider
-      );
+    executeContract(
+        contract -> {
+          try {
+            DidKeyUrlParser parser = new DidKeyUrlParser(didKeyUrl);
+            var versionId =
+                didDocStatus == DidDocStatus.REVOKED ? Strings.EMPTY : parser.getVersionId();
 
-      var versionId = didDocStatus == DidDocStatus.REVOKED ? Strings.EMPTY : parser.getVersionId();
-      return contract.updateDidDocStatusInService(
-              parser.getDid(),
-              didDocStatus.getRawValue(),
-              versionId
-          )
-          .send()
-          .getStatus();
-    } catch (ContractCallException e) {
-      throw new BlockChainException(
-          BlockchainErrorCode.TRANSACTION_ERROR,
-          new Error("Contract call error: " + e.getMessage())
-      );
-    } catch (Exception e) {
-      throw new BlockChainException(
-          BlockchainErrorCode.CONNECTION_ERROR,
-          new Error("Network error: " + e.getMessage())
-      );
-    }
+            return contract.updateDidDocStatusInService(
+                    parser.getDid(),
+                    didDocStatus.getRawValue(),
+                    versionId
+                )
+                .send()
+                .getStatus();
+          } catch (Exception e) {
+            logger.error(
+                "Error update document status: " + e.getMessage(),
+                e
+            );
+
+            throw new RuntimeException(e);
+          }
+        },
+        false
+    );
+    return null;
   }
 
   @Override
@@ -334,13 +335,20 @@ public class EvmContractApi implements ContractApi {
           gasProvider
       );
 
-      return contract.updateDidDocStatusRevocation(
+      var result = contract.updateDidDocStatusRevocation(
               parser.getDid(),
               didDocStatus.getRawValue(),
               terminatedTime.format(DateTimeFormatter.ISO_DATE_TIME)
           )
-          .send()
-          .getStatus();
+          .send();
+
+      logger.info("Update document status is successful.");
+
+      return new EvmResponse(
+          200,
+          result.getStatus(),
+          result.getTransactionHash()
+      );
     } catch (ContractCallException e) {
       throw new BlockChainException(
           BlockchainErrorCode.TRANSACTION_ERROR,

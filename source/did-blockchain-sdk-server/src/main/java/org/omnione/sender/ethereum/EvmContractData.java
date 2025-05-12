@@ -12,7 +12,6 @@ public class EvmContractData extends ContractData {
 
   private final String contractAddress;
   private final String privateKey;
-  private ContractFunctionName functionName;
   private List<Object> inputParameters;
   private List<TypeReference<?>> outputParameters;
   private Boolean isView;
