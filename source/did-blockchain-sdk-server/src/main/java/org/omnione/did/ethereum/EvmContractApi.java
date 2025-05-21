@@ -179,7 +179,9 @@ public class EvmContractApi implements ContractApi {
     executeContract(
         contract -> {
           try {
-            var document = convertJsonToDocument(invokedDidDoc.getDidDoc());
+            DidDocument didDocument = new DidDocument();
+            didDocument.fromJson(invokedDidDoc.getDidDoc());
+            var document = EvmDataConverter.convertToContractObject(didDocument);
             logger.debug("Converted DID Document: " + document.id);
             contract.registDidDoc(
                     document,
@@ -198,55 +200,6 @@ public class EvmContractApi implements ContractApi {
           }
         },
         false
-    );
-  }
-
-  /**
-   * Converts a JSON string to an OpenDID.Document object.
-   *
-   * @param json JSON string representing the DID Document.
-   * @return OpenDID.Document object.
-   */
-  private OpenDID.Document convertJsonToDocument(String json) {
-    logger.debug("Converting JSON to OpenDID.Document.");
-    DidDocument didDocument = new DidDocument();
-    didDocument.fromJson(json);
-
-    var verificationMethodList = didDocument.getVerificationMethod()
-        .stream()
-        .map(value -> new OpenDID.VerificationMethod(
-            value.getId(),
-            new BigInteger(value.getType()),
-            value.getController(),
-            value.getPublicKeyMultibase(),
-            new BigInteger(String.valueOf(value.getAuthType()))
-        ))
-        .toList();
-    var servicesList = didDocument.getService()
-        .stream()
-        .map(value -> new OpenDID.Service(
-            value.getId(),
-            value.getType(),
-            value.getServiceEndpoint()
-        ))
-        .toList();
-
-    logger.debug("Converted OpenDID.Document successfully.");
-    return new OpenDID.Document(
-        didDocument.getContext(),
-        didDocument.getId(),
-        didDocument.getController(),
-        didDocument.getCreated(),
-        didDocument.getUpdated(),
-        didDocument.getVersionId(),
-        didDocument.getDeactivated(),
-        verificationMethodList,
-        didDocument.getAssertionMethod(),
-        didDocument.getAuthentication(),
-        didDocument.getKeyAgreement(),
-        didDocument.getCapabilityInvocation(),
-        didDocument.getCapabilityDelegation(),
-        servicesList
     );
   }
 
